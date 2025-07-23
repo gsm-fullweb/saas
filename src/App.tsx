@@ -6,11 +6,13 @@ import Dashboard from './components/chatwoot/Dashboard';
 import ConversationsList from './components/chatwoot/ConversationsList';
 import KanbanBoard from './components/chatwoot/KanbanBoard';
 import { WorkingDemo } from './components/chatwoot/WorkingDemo';
+import { DebugPanel } from './components/chatwoot/DebugPanel';
+import Home from './components/Home';
 import { useChatwootData } from './hooks/useChatwootData';
 import { User } from './types/chatwoot';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('home');
   
   // Current user - in real app, this would come from authentication
   const [currentUser] = useState<User>({
@@ -30,12 +32,26 @@ function App() {
     agents,
     contacts,
     teams,
+    inboxes,
     metrics,
     refreshData,
     processNewMessage,
     processStatusChange,
     processAgentAssignment,
   } = useChatwootData(1); // account_id = 1
+
+  // Log para debug dos dados recebidos
+  console.log('📊 App.tsx - Dados recebidos:', {
+    loading,
+    error,
+    conversationsCount: conversations.length,
+    agentsCount: agents.length,
+    contactsCount: contacts.length,
+    teamsCount: teams.length,
+    inboxesCount: inboxes.length,
+    metrics,
+    lastUpdate
+  });
 
   // Transformar dados para compatibilidade com componentes existentes
   const transformedConversations = conversations.map((conv: any) => ({
@@ -54,6 +70,13 @@ function App() {
       show_on_sidebar: true
     })) || []
   }));
+
+  // Log para debug das conversas transformadas
+  console.log('🔄 App.tsx - Conversas transformadas:', {
+    originalCount: conversations.length,
+    transformedCount: transformedConversations.length,
+    sampleConversation: transformedConversations[0]
+  });
 
   const handleUpdateConversation = async (conversationId: number, updates: any) => {
     try {
@@ -112,6 +135,12 @@ function App() {
 
   const renderActiveTab = () => {
     switch (activeTab) {
+      case 'home':
+        return (
+          <Home
+            onConversationClick={handleConversationClick}
+          />
+        );
       case 'dashboard':
         return (
           <Dashboard
@@ -142,6 +171,12 @@ function App() {
         );
       case 'demo':
         return <WorkingDemo />;
+      case 'debug':
+        return (
+          <div className="p-6">
+            <DebugPanel />
+          </div>
+        );
       case 'reports':
         return (
           <div className="text-center py-12">

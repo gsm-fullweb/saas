@@ -35,14 +35,16 @@ export class LangChainOrchestrator {
       ? import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.REACT_APP_OPENAI_API_KEY
       : process.env.REACT_APP_OPENAI_API_KEY;
     
-    if (apiKey) {
+    if (apiKey && apiKey !== 'your_openai_api_key_here') {
       this.openaiModel = new ChatOpenAI({
         openAIApiKey: apiKey,
         modelName: "gpt-4",
         temperature: 0.3,
       });
+      console.log('✅ OpenAI model initialized successfully');
     } else {
       console.warn('⚠️ OpenAI API key não encontrada. LangChain funcionará em modo limitado.');
+      console.log('💡 Para habilitar funcionalidades de IA, configure VITE_OPENAI_API_KEY no arquivo .env');
     }
   }
 
@@ -175,7 +177,21 @@ export class LangChainOrchestrator {
         new HumanMessage(prompt)
       ]);
 
-      const result = JSON.parse(response?.content as string);
+      // Validar se a resposta existe e tem conteúdo
+      if (!response?.content) {
+        console.warn('⚠️ OpenAI response is empty or undefined for lead scoring');
+        return this.performBasicLeadScoring(conversation);
+      }
+
+      // Tentar fazer o parse do JSON
+      let result;
+      try {
+        result = JSON.parse(response.content as string);
+      } catch (parseError) {
+        console.warn('⚠️ Failed to parse OpenAI response as JSON for lead scoring:', response.content);
+        return this.performBasicLeadScoring(conversation);
+      }
+
       return result as LeadScore;
     } catch (error) {
       console.error('Erro no lead scoring com IA:', error);
@@ -222,6 +238,12 @@ export class LangChainOrchestrator {
 
   // 2. RESPOSTA AUTOMÁTICA INTELIGENTE
   async generateAutoReply(conversation: any, context?: any): Promise<string | null> {
+    // Verificar se o modelo está disponível
+    if (!this.openaiModel) {
+      console.warn('⚠️ OpenAI model não disponível para auto reply');
+      return null;
+    }
+
     const systemPrompt = `Você é um assistente de suporte ao cliente especializado em respostas automáticas.
     
     Gere uma resposta automática baseada no contexto da conversa. Considere:
@@ -239,12 +261,18 @@ export class LangChainOrchestrator {
     const prompt = `Analise esta conversa e gere uma resposta automática se apropriado:\n\n${conversationText}${contextInfo}`;
 
     try {
-      const response = await this.openaiModel?.invoke([
+      const response = await this.openaiModel.invoke([
         new SystemMessage(systemPrompt),
         new HumanMessage(prompt)
       ]);
 
-      const reply = response?.content as string;
+      // Validar se a resposta existe e tem conteúdo
+      if (!response?.content) {
+        console.warn('⚠️ OpenAI response is empty or undefined for auto reply');
+        return null;
+      }
+
+      const reply = response.content as string;
       
       // Verifica se a resposta indica necessidade de intervenção humana
       if (reply.toLowerCase().includes('intervenção humana') || 
@@ -267,6 +295,16 @@ export class LangChainOrchestrator {
     priority: 'high' | 'medium' | 'low';
     tags: string[];
   }> {
+    // Verificar se o modelo está disponível
+    if (!this.openaiModel) {
+      console.warn('⚠️ OpenAI model não disponível para routing');
+      return {
+        channel: 'web',
+        priority: 'medium',
+        tags: ['roteamento-automático']
+      };
+    }
+
     const systemPrompt = `Você é um especialista em roteamento de atendimento ao cliente.
     
     Analise a conversa e determine:
@@ -289,12 +327,34 @@ export class LangChainOrchestrator {
     const prompt = `Analise esta conversa para roteamento:\n\n${conversationText}\n\nAgentes disponíveis:\n${agentsInfo}`;
 
     try {
-      const response = await this.openaiModel?.invoke([
+      const response = await this.openaiModel.invoke([
         new SystemMessage(systemPrompt),
         new HumanMessage(prompt)
       ]);
 
-      const result = JSON.parse(response?.content as string);
+      // Validar se a resposta existe e tem conteúdo
+      if (!response?.content) {
+        console.warn('⚠️ OpenAI response is empty or undefined for routing');
+        return {
+          channel: 'web',
+          priority: 'medium',
+          tags: ['roteamento-automático']
+        };
+      }
+
+      // Tentar fazer o parse do JSON
+      let result;
+      try {
+        result = JSON.parse(response.content as string);
+      } catch (parseError) {
+        console.warn('⚠️ Failed to parse OpenAI response as JSON for routing:', response.content);
+        return {
+          channel: 'web',
+          priority: 'medium',
+          tags: ['roteamento-automático']
+        };
+      }
+
       return result;
     } catch (error) {
       console.error('Erro no roteamento:', error);
@@ -312,6 +372,16 @@ export class LangChainOrchestrator {
     suggestedTags: string[];
     vipStatus: boolean;
   }> {
+    // Verificar se o modelo está disponível
+    if (!this.openaiModel) {
+      console.warn('⚠️ OpenAI model não disponível para enrichment');
+      return {
+        enrichedData: {},
+        suggestedTags: ['enrichment-disabled'],
+        vipStatus: false
+      };
+    }
+
     const systemPrompt = `Você é um especialista em enriquecimento de dados de contatos.
     
     Analise o contato e a conversa para:
@@ -327,12 +397,35 @@ export class LangChainOrchestrator {
     const prompt = `Enriqueça os dados deste contato:\n\n${contactInfo}\n\nConversa:\n${conversationText}`;
 
     try {
-      const response = await this.openaiModel?.invoke([
+      const response = await this.openaiModel.invoke([
         new SystemMessage(systemPrompt),
         new HumanMessage(prompt)
       ]);
 
-      const result = JSON.parse(response?.content as string);
+      // Validar se a resposta existe e tem conteúdo
+      if (!response?.content) {
+        console.warn('⚠️ OpenAI response is empty or undefined');
+        return {
+          enrichedData: {},
+          suggestedTags: ['enrichment-error'],
+          vipStatus: false
+        };
+      }
+
+      // Tentar fazer o parse do JSON
+      let result;
+      try {
+        result = JSON.parse(response.content as string);
+      } catch (parseError) {
+        console.warn('⚠️ Failed to parse OpenAI response as JSON:', response.content);
+        // Se não conseguir fazer parse, retornar dados padrão
+        return {
+          enrichedData: {},
+          suggestedTags: ['enrichment-error'],
+          vipStatus: false
+        };
+      }
+
       return result;
     } catch (error) {
       console.error('Erro no enrichment:', error);

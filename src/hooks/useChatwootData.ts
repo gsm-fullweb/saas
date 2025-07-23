@@ -57,6 +57,14 @@ interface ChatwootTeam {
   is_member: boolean;
 }
 
+interface ChatwootInbox {
+  id: number;
+  name: string;
+  channel_type: string;
+  account_id: number;
+  enabled: boolean;
+}
+
 interface DashboardMetrics {
   open_conversations: number;
   resolved_conversations: number;
@@ -71,6 +79,8 @@ interface DashboardMetrics {
 
 // Hook principal para gerenciar todos os dados do Chatwoot
 export const useChatwootData = (accountId: number = 1) => {
+  console.log('🔄 useChatwootData hook called with accountId:', accountId);
+  
   const [api] = useState(() => new ChatwootAPI(accountId));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +91,7 @@ export const useChatwootData = (accountId: number = 1) => {
   const [agents, setAgents] = useState<ChatwootAgent[]>([]);
   const [contacts, setContacts] = useState<ChatwootContact[]>([]);
   const [teams, setTeams] = useState<ChatwootTeam[]>([]);
+  const [inboxes, setInboxes] = useState<ChatwootInbox[]>([]);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     open_conversations: 0,
     resolved_conversations: 0,
@@ -95,6 +106,7 @@ export const useChatwootData = (accountId: number = 1) => {
 
   // Função para carregar todos os dados
   const loadAllData = useCallback(async () => {
+    console.log('🔄 loadAllData called');
     setLoading(true);
     setError(null);
 
@@ -102,23 +114,48 @@ export const useChatwootData = (accountId: number = 1) => {
       console.log('🔄 Loading all Chatwoot data from proxy...');
 
       // Carregar dados em paralelo
-      const [conversationsData, agentsData, contactsData, teamsData] = await Promise.all([
+      console.log('📡 Starting API calls...');
+      const [conversationsData, agentsData, contactsData, teamsData, inboxesData] = await Promise.all([
         api.getConversations(),
         api.getAgents(),
         api.getContacts(),
         api.getTeams(),
+        api.getInboxes(),
       ]);
 
+      console.log('📊 Raw data received:', {
+        conversations: conversationsData,
+        agents: agentsData,
+        contacts: contactsData,
+        teams: teamsData,
+        inboxes: inboxesData
+      });
+
+      // Verificar se os dados estão vazios
+      if (!conversationsData || conversationsData.length === 0) {
+        console.warn('⚠️ No conversations data received');
+      }
+      if (!agentsData || agentsData.length === 0) {
+        console.warn('⚠️ No agents data received');
+      }
+      if (!inboxesData || inboxesData.length === 0) {
+        console.warn('⚠️ No inboxes data received');
+      }
+
       // Processar conversas com LangChain
+      console.log('🤖 Processing conversations with LangChain...');
       const processedConversations = await processConversationsWithLangChain(conversationsData);
       
       // Atualizar estados
+      console.log('💾 Updating state with processed data...');
       setConversations(processedConversations);
       setAgents(agentsData);
       setContacts(contactsData);
       setTeams(teamsData);
+      setInboxes(inboxesData);
 
       // Calcular métricas
+      console.log('📈 Calculating metrics...');
       const calculatedMetrics = calculateMetrics(processedConversations, agentsData);
       setMetrics(calculatedMetrics);
 
@@ -129,6 +166,7 @@ export const useChatwootData = (accountId: number = 1) => {
         agents: agentsData.length,
         contacts: contactsData.length,
         teams: teamsData.length,
+        inboxes: inboxesData.length,
         metrics: calculatedMetrics,
         source: 'Real proxy data + LangChain processing'
       });
@@ -137,7 +175,9 @@ export const useChatwootData = (accountId: number = 1) => {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
       console.error('❌ Error loading data:', err);
+      console.error('❌ Error stack:', err instanceof Error ? err.stack : 'No stack trace');
     } finally {
+      console.log('🔄 Setting loading to false');
       setLoading(false);
     }
   }, [api]);
@@ -164,6 +204,8 @@ export const useChatwootData = (accountId: number = 1) => {
 
   // Calcular métricas
   const calculateMetrics = (conversations: ChatwootConversation[], agents: ChatwootAgent[]): DashboardMetrics => {
+    console.log('🔍 Calculating metrics with:', { conversations: conversations.length, agents: agents.length });
+    
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -187,7 +229,7 @@ export const useChatwootData = (accountId: number = 1) => {
     // Calcular tempo médio de resposta (simulado por enquanto)
     const avgResponseTime = 7; // minutos
 
-    return {
+    const calculatedMetrics = {
       open_conversations: openConversations,
       resolved_conversations: resolvedConversations,
       pending_conversations: pendingConversations,
@@ -198,10 +240,16 @@ export const useChatwootData = (accountId: number = 1) => {
       total_conversations_today: totalConversationsToday,
       resolution_rate: resolutionRate,
     };
+
+    console.log('📊 Calculated metrics:', calculatedMetrics);
+    console.log('🔍 Sample conversation statuses:', conversations.slice(0, 5).map(c => ({ id: c.id, status: c.status, unread: c.unread_count })));
+
+    return calculatedMetrics;
   };
 
   // Carregar dados na inicialização
   useEffect(() => {
+    console.log('🔄 useEffect triggered - calling loadAllData');
     loadAllData();
   }, [loadAllData]);
 
@@ -217,7 +265,7 @@ export const useChatwootData = (accountId: number = 1) => {
       if (!conversation) return;
 
       const event = {
-        type: 'message_created',
+        type: 'message_created' as const,
         data: {
           conversation,
           message,
@@ -246,7 +294,7 @@ export const useChatwootData = (accountId: number = 1) => {
       if (!conversation) return;
 
       const event = {
-        type: 'conversation_status_changed',
+        type: 'conversation_status_changed' as const,
         data: {
           conversation,
           newStatus,
@@ -275,7 +323,7 @@ export const useChatwootData = (accountId: number = 1) => {
       if (!conversation) return;
 
       const event = {
-        type: 'agent_assigned',
+        type: 'agent_assigned' as const,
         data: {
           conversation,
           agentId,
@@ -306,6 +354,7 @@ export const useChatwootData = (accountId: number = 1) => {
     agents,
     contacts,
     teams,
+    inboxes,
     metrics,
 
     // Funções

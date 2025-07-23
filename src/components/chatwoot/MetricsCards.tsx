@@ -8,10 +8,13 @@ interface MetricsCardsProps {
 }
 
 const MetricsCards: React.FC<MetricsCardsProps> = ({ metrics, loading = false }) => {
+  // Log para debug
+  console.log('📊 MetricsCards render:', { metrics, loading });
+
   const cards = [
     {
       title: 'Abertas',
-      value: metrics.open_conversations,
+      value: metrics?.open_conversations || 0,
       icon: MessageSquare,
       color: 'bg-blue-500',
       bgColor: 'bg-blue-50 dark:bg-blue-900/20',
@@ -19,7 +22,7 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({ metrics, loading = false })
     },
     {
       title: 'Resolvidas',
-      value: metrics.resolved_conversations,
+      value: metrics?.resolved_conversations || 0,
       icon: CheckCircle,
       color: 'bg-green-500',
       bgColor: 'bg-green-50 dark:bg-green-900/20',
@@ -27,7 +30,7 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({ metrics, loading = false })
     },
     {
       title: 'Pendentes',
-      value: metrics.pending_conversations,
+      value: metrics?.pending_conversations || 0,
       icon: Clock,
       color: 'bg-yellow-500',
       bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
@@ -35,7 +38,7 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({ metrics, loading = false })
     },
     {
       title: 'Pausadas',
-      value: metrics.snoozed_conversations,
+      value: metrics?.snoozed_conversations || 0,
       icon: Pause,
       color: 'bg-purple-500',
       bgColor: 'bg-purple-50 dark:bg-purple-900/20',
@@ -43,7 +46,7 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({ metrics, loading = false })
     },
     {
       title: 'Atendentes Online',
-      value: metrics.agents_online,
+      value: metrics?.agents_online || 0,
       icon: Users,
       color: 'bg-emerald-500',
       bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
@@ -51,7 +54,7 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({ metrics, loading = false })
     },
     {
       title: 'SLA Médio',
-      value: `${metrics.avg_response_time}min`,
+      value: `${metrics?.avg_response_time || 0}min`,
       icon: Timer,
       color: 'bg-indigo-500',
       bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
@@ -59,7 +62,7 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({ metrics, loading = false })
     },
     {
       title: 'Sem Resposta',
-      value: metrics.conversations_without_reply,
+      value: metrics?.conversations_without_reply || 0,
       icon: AlertCircle,
       color: 'bg-red-500',
       bgColor: 'bg-red-50 dark:bg-red-900/20',
@@ -67,7 +70,7 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({ metrics, loading = false })
     },
     {
       title: 'Taxa Resolução',
-      value: `${metrics.resolution_rate}%`,
+      value: `${metrics?.resolution_rate || 0}%`,
       icon: TrendingUp,
       color: 'bg-teal-500',
       bgColor: 'bg-teal-50 dark:bg-teal-900/20',

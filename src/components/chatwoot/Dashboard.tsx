@@ -10,8 +10,23 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ metrics, recentConversations, loading = false }) => {
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
+  // Log para debug
+  console.log('📊 Dashboard render:', { 
+    metrics, 
+    conversationsCount: recentConversations.length,
+    loading 
+  });
+
+  const formatTimeAgo = (dateInput: string | number) => {
+    let date: Date;
+    
+    // Se for timestamp (número), converter para Date
+    if (typeof dateInput === 'number') {
+      date = new Date(dateInput * 1000); // Assumindo timestamp em segundos
+    } else {
+      date = new Date(dateInput);
+    }
+    
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);
@@ -78,6 +93,9 @@ const Dashboard: React.FC<DashboardProps> = ({ metrics, recentConversations, loa
                 <p className="text-gray-600 dark:text-gray-400">
                   Nenhuma atividade recente
                 </p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                  {loading ? 'Carregando...' : 'Nenhuma conversa encontrada'}
+                </p>
               </div>
             ) : (
               recentConversations.slice(0, 5).map((conversation) => (
@@ -86,12 +104,12 @@ const Dashboard: React.FC<DashboardProps> = ({ metrics, recentConversations, loa
                   className="flex items-center space-x-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors cursor-pointer"
                 >
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-semibold">
-                    {conversation.contact.name.charAt(0).toUpperCase()}
+                    {(conversation.contact?.name || 'C').charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <p className="font-medium text-gray-900 dark:text-white">
-                        {conversation.contact.name}
+                        {conversation.contact?.name || 'Cliente'}
                       </p>
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(conversation.status)}`}>
                         {getStatusLabel(conversation.status)}
@@ -121,7 +139,7 @@ const Dashboard: React.FC<DashboardProps> = ({ metrics, recentConversations, loa
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600 dark:text-gray-400">Média Hoje</span>
               <span className="font-semibold text-gray-900 dark:text-white">
-                {metrics.avg_response_time} min
+                {metrics?.avg_response_time || 0} min
               </span>
             </div>
             
@@ -135,14 +153,21 @@ const Dashboard: React.FC<DashboardProps> = ({ metrics, recentConversations, loa
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div 
                 className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${Math.min((15 / metrics.avg_response_time) * 100, 100)}%` }}
+                style={{ 
+                  width: `${Math.min(
+                    (metrics?.avg_response_time || 0) > 0 
+                      ? (15 / (metrics?.avg_response_time || 1)) * 100 
+                      : 100, 
+                    100
+                  )}%` 
+                }}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-6">
               <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {metrics.resolution_rate}%
+                  {metrics?.resolution_rate || 0}%
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Taxa de Resolução
@@ -150,7 +175,7 @@ const Dashboard: React.FC<DashboardProps> = ({ metrics, recentConversations, loa
               </div>
               <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {metrics.agents_online}
+                  {metrics?.agents_online || 0}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Agentes Online

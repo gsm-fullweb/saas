@@ -22,6 +22,13 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   onAddNote,
   onAddLabel
 }) => {
+  // Log para debug
+  console.log('📋 ConversationsList render:', { 
+    conversationsCount: conversations.length,
+    agentsCount: agents.length,
+    sampleConversation: conversations[0]
+  });
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
@@ -33,7 +40,8 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   const [selectedConversationForTeam, setSelectedConversationForTeam] = useState<Conversation | null>(null);
 
   const filteredConversations = conversations.filter(conversation => {
-    const matchesSearch = conversation.contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const contactName = conversation.contact?.name || 'Cliente';
+    const matchesSearch = contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          conversation.id.toString().includes(searchTerm);
     const matchesStatus = statusFilter === 'all' || conversation.status === statusFilter;
     const matchesAssignee = assigneeFilter === 'all' || 
@@ -97,8 +105,16 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
     await new Promise(resolve => setTimeout(resolve, 1000));
   };
 
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatTimeAgo = (dateInput: string | number) => {
+    let date: Date;
+    
+    // Se for timestamp (número), converter para Date
+    if (typeof dateInput === 'number') {
+      date = new Date(dateInput * 1000); // Assumindo timestamp em segundos
+    } else {
+      date = new Date(dateInput);
+    }
+    
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);
@@ -277,11 +293,11 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                   <td className="px-4 py-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                        {conversation.contact.name.charAt(0).toUpperCase()}
+                        {(conversation.contact?.name || 'C').charAt(0).toUpperCase()}
                       </div>
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">
-                          {conversation.contact.name}
+                          {conversation.contact?.name || 'Cliente'}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           #{conversation.id}
@@ -303,10 +319,10 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                     {conversation.assignee ? (
                       <div className="flex items-center space-x-2">
                         <div className="w-6 h-6 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                          {conversation.assignee.name.charAt(0).toUpperCase()}
+                          {(conversation.assignee.name || 'A').charAt(0).toUpperCase()}
                         </div>
                         <span className="text-sm text-gray-900 dark:text-white">
-                          {conversation.assignee.name}
+                          {conversation.assignee.name || 'Agente'}
                         </span>
                       </div>
                     ) : (
@@ -319,11 +335,11 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                     <div className="flex items-center space-x-2">
                       <MessageSquare className="w-4 h-4 text-gray-400" />
                       <span className="text-sm text-gray-900 dark:text-white">
-                        {conversation.messages_count}
+                        {conversation.messages_count || 0}
                       </span>
-                      {conversation.unread_count > 0 && (
+                      {(conversation.unread_count || 0) > 0 && (
                         <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                          {conversation.unread_count}
+                          {conversation.unread_count || 0}
                         </span>
                       )}
                     </div>
@@ -408,9 +424,17 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
               Nenhuma conversa encontrada
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Tente ajustar os filtros ou termos de busca
+            <p className="text-gray-600 dark:text-gray-400 mb-2">
+              {conversations.length === 0 
+                ? 'Nenhuma conversa carregada ainda' 
+                : 'Tente ajustar os filtros ou termos de busca'
+              }
             </p>
+            {conversations.length === 0 && (
+              <p className="text-xs text-gray-500 dark:text-gray-500">
+                Total de conversas: {conversations.length}
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -423,12 +447,12 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
           setSelectedConversationForContact(null);
         }}
         conversationData={selectedConversationForContact ? {
-          name: selectedConversationForContact.contact.name,
-          email: selectedConversationForContact.contact.email,
-          phone_number: selectedConversationForContact.contact.phone_number,
-          avatar_url: selectedConversationForContact.contact.thumbnail,
-          identifier: selectedConversationForContact.contact.identifier,
-          additional_attributes: selectedConversationForContact.contact.additional_attributes
+          name: selectedConversationForContact.contact?.name || 'Cliente',
+          email: selectedConversationForContact.contact?.email,
+          phone_number: selectedConversationForContact.contact?.phone_number,
+          avatar_url: selectedConversationForContact.contact?.thumbnail,
+          identifier: selectedConversationForContact.contact?.identifier,
+          additional_attributes: selectedConversationForContact.contact?.additional_attributes
         } : undefined}
         onContactCreated={handleContactCreated}
       />

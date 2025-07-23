@@ -1,18 +1,20 @@
 import React from 'react';
-import { BarChart3, MessageSquare, Kanban, FileText, Settings, Zap } from 'lucide-react';
+import { BarChart3, MessageSquare, Kanban, FileText, Settings, Zap, Bug, Home } from 'lucide-react';
 
 interface NavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  userRole: 'administrator' | 'agent';
+  userRole: string;
 }
 
 const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange, userRole }) => {
   const tabs = [
+    { id: 'home', label: 'Home', icon: Home, roles: ['administrator', 'agent'] },
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, roles: ['administrator', 'agent'] },
     { id: 'conversations', label: 'Conversas', icon: MessageSquare, roles: ['administrator', 'agent'] },
     { id: 'kanban', label: 'Kanban', icon: Kanban, roles: ['administrator', 'agent'] },
     { id: 'demo', label: 'Demo', icon: Zap, roles: ['administrator', 'agent'] },
+    { id: 'debug', label: 'Debug', icon: Bug, roles: ['administrator', 'agent'] },
     { id: 'reports', label: 'Relatórios', icon: FileText, roles: ['administrator'] },
     { id: 'config', label: 'Config', icon: Settings, roles: ['administrator'] },
   ];

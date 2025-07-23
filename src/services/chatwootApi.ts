@@ -1,10 +1,65 @@
 const PROXY_BASE_URL = 'https://api.chathook.com.br/api/chatwoot-proxy.php';
+const CORS_PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
 
 class ChatwootAPI {
   private accountId: number;
+  private useCorsProxy: boolean;
 
   constructor(accountId: number) {
     this.accountId = accountId;
+    this.useCorsProxy = false; // Pode ser ativado se necessário
+  }
+
+  // Função utilitária para extrair dados de diferentes estruturas de resposta
+  private extractDataFromResponse(data: any, endpoint: string): any[] {
+    console.log(`🔍 Extracting data from ${endpoint} response:`, data);
+    
+    // Estrutura 1: { data: { payload: [...] } }
+    if (data?.data?.payload && Array.isArray(data.data.payload)) {
+      console.log(`📦 ${endpoint}: Found data.data.payload structure`);
+      return data.data.payload;
+    }
+    
+    // Estrutura 2: { data: [...] }
+    if (data?.data && Array.isArray(data.data)) {
+      console.log(`📦 ${endpoint}: Found data structure`);
+      return data.data;
+    }
+    
+    // Estrutura 3: { payload: [...] }
+    if (data?.payload && Array.isArray(data.payload)) {
+      console.log(`📦 ${endpoint}: Found payload structure`);
+      return data.payload;
+    }
+    
+    // Estrutura 4: { agents: [...] }, { contacts: [...] }, etc.
+    const possibleKeys = ['agents', 'contacts', 'teams', 'inboxes', 'conversations', 'messages'];
+    for (const key of possibleKeys) {
+      if (data?.[key] && Array.isArray(data[key])) {
+        console.log(`📦 ${endpoint}: Found ${key} structure`);
+        return data[key];
+      }
+    }
+    
+    // Estrutura 5: Array direto
+    if (Array.isArray(data)) {
+      console.log(`📦 ${endpoint}: Found direct array structure`);
+      return data;
+    }
+    
+    // Estrutura 6: { data: { agents: [...] } }, { data: { contacts: [...] } }, etc.
+    if (data?.data && typeof data.data === 'object') {
+      for (const key of possibleKeys) {
+        if (data.data[key] && Array.isArray(data.data[key])) {
+          console.log(`📦 ${endpoint}: Found data.${key} structure`);
+          return data.data[key];
+        }
+      }
+    }
+    
+    console.warn(`⚠️ ${endpoint}: Unknown data structure, returning empty array`);
+    console.log('🔍 Full response structure:', JSON.stringify(data, null, 2));
+    return [];
   }
 
   // Mock data for development when proxy is unavailable
@@ -183,30 +238,44 @@ class ChatwootAPI {
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${PROXY_BASE_URL}?endpoint=${encodeURIComponent(endpoint)}&account_id=${this.accountId}`;
+    const url = `${PROXY_BASE_URL}?endpoint=${encodeURIComponent(endpoint)}&account_id=${this.accountId}&debug=1`;
     
     console.log(`🔄 API Request: ${options.method || 'GET'} ${url}`);
     
-    const response = await fetch(url, {
-      method: options.method || 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...options.headers,
-      },
-      mode: 'cors',
-      ...options,
-    });
+    try {
+      console.log('🔄 Making fetch request...');
+      const response = await fetch(url, {
+        method: options.method || 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...options.headers,
+        },
+        mode: 'cors',
+        ...options,
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ API Error: ${response.status} ${response.statusText}`, errorText);
-      throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
+      console.log('🔄 Response received:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ API Error: ${response.status} ${response.statusText}`, errorText);
+        throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      console.log('🔄 Parsing JSON response...');
+      const data = await response.json();
+      console.log(`✅ API Response:`, data);
+      return data;
+    } catch (error) {
+      console.log('🔄 Error in request:', error);
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        console.warn('⚠️ CORS Error: Proxy não acessível. Usando dados mock.');
+        console.error('❌ CORS Error details:', error);
+        throw new Error('CORS_ERROR: Proxy não acessível - usando dados mock');
+      }
+      throw error;
     }
-
-    const data = await response.json();
-    console.log(`✅ API Response:`, data);
-    return data;
   }
 
   // Conversations
@@ -216,12 +285,20 @@ class ChatwootAPI {
       if (assigneeId) {
         endpoint += `?assignee_id=${assigneeId}`;
       }
+      console.log('🔄 getConversations: Attempting to fetch from proxy...');
       const data = await this.request<any[]>(endpoint);
       console.log(`✅ Real conversations loaded: ${Array.isArray(data) ? data.length : 'unknown'} items`);
-      return Array.isArray(data) ? data : [];
+      
+      // Usar a função utilitária para extrair dados
+      const conversations = this.extractDataFromResponse(data, 'conversations');
+      console.log(`📊 Extracted ${conversations.length} conversations`);
+      
+      return conversations;
     } catch (error) {
       console.warn('⚠️ Proxy unavailable, using mock conversations data');
+      console.error('❌ Error details:', error);
       const mockData = this.getMockConversations();
+      console.log('📦 Returning mock data:', mockData.length, 'conversations');
       if (assigneeId) {
         return mockData.filter(conv => conv.assignee_id === assigneeId);
       }
@@ -299,10 +376,53 @@ class ChatwootAPI {
     try {
       const data = await this.request<any[]>('contacts');
       console.log(`✅ Real contacts loaded: ${Array.isArray(data) ? data.length : 'unknown'} items`);
-      return Array.isArray(data) ? data : [];
+      
+      // Usar a função utilitária para extrair dados
+      const contacts = this.extractDataFromResponse(data, 'contacts');
+      console.log(`📊 Extracted ${contacts.length} contacts`);
+      
+      return contacts;
     } catch (error) {
-      console.warn('⚠️ Proxy unavailable, using mock contacts data');
+      if (error instanceof Error && error.message.includes('CORS_ERROR')) {
+        console.warn('⚠️ CORS Error: Proxy não acessível. Usando dados mock para contacts.');
+      } else {
+        console.warn('⚠️ Proxy unavailable, using mock contacts data');
+        console.error('❌ Error details:', error);
+      }
       return [];
+    }
+  }
+
+  // Inboxes
+  async getInboxes() {
+    try {
+      const data = await this.request<any[]>('inboxes');
+      console.log(`✅ Real inboxes loaded: ${Array.isArray(data) ? data.length : 'unknown'} items`);
+      
+      // Usar a função utilitária para extrair dados
+      const inboxes = this.extractDataFromResponse(data, 'inboxes');
+      console.log(`📊 Extracted ${inboxes.length} inboxes`);
+      
+      return inboxes;
+    } catch (error) {
+      console.warn('⚠️ Proxy unavailable, using mock inboxes data');
+      console.error('❌ Error details:', error);
+      return [
+        {
+          id: 1,
+          name: 'WhatsApp',
+          channel_type: 'Channel::Api',
+          account_id: 1,
+          enabled: true
+        },
+        {
+          id: 2,
+          name: 'Email',
+          channel_type: 'Channel::Email',
+          account_id: 1,
+          enabled: true
+        }
+      ];
     }
   }
 
@@ -311,7 +431,12 @@ class ChatwootAPI {
     try {
       const data = await this.request<any[]>(`conversations/${conversationId}/messages`);
       console.log(`✅ Real messages loaded for conversation #${conversationId}: ${Array.isArray(data) ? data.length : 'unknown'} items`);
-      return Array.isArray(data) ? data : [];
+      
+      // Usar a função utilitária para extrair dados
+      const messages = this.extractDataFromResponse(data, `messages-${conversationId}`);
+      console.log(`📊 Extracted ${messages.length} messages for conversation #${conversationId}`);
+      
+      return messages;
     } catch (error) {
       console.warn('⚠️ Proxy unavailable, using mock messages data');
       return [];
@@ -413,9 +538,19 @@ class ChatwootAPI {
     try {
       const data = await this.request<any[]>('teams');
       console.log(`✅ Real teams loaded: ${Array.isArray(data) ? data.length : 'unknown'} items`);
-      return Array.isArray(data) ? data : [];
+      
+      // Usar a função utilitária para extrair dados
+      const teams = this.extractDataFromResponse(data, 'teams');
+      console.log(`📊 Extracted ${teams.length} teams`);
+      
+      return teams;
     } catch (error) {
-      console.warn('⚠️ Proxy unavailable, using mock teams data');
+      if (error instanceof Error && error.message.includes('CORS_ERROR')) {
+        console.warn('⚠️ CORS Error: Proxy não acessível. Usando dados mock para teams.');
+      } else {
+        console.warn('⚠️ Proxy unavailable, using mock teams data');
+        console.error('❌ Error details:', error);
+      }
       return [
         { 
           id: 1, 
@@ -450,9 +585,19 @@ class ChatwootAPI {
     try {
       const data = await this.request<any[]>('agents');
       console.log(`✅ Real agents loaded: ${Array.isArray(data) ? data.length : 'unknown'} items`);
-      return Array.isArray(data) ? data : [];
+      
+      // Usar a função utilitária para extrair dados
+      const agents = this.extractDataFromResponse(data, 'agents');
+      console.log(`📊 Extracted ${agents.length} agents`);
+      
+      return agents;
     } catch (error) {
-      console.warn('⚠️ Proxy unavailable, using mock agents data');
+      if (error instanceof Error && error.message.includes('CORS_ERROR')) {
+        console.warn('⚠️ CORS Error: Proxy não acessível. Usando dados mock para agents.');
+      } else {
+        console.warn('⚠️ Proxy unavailable, using mock agents data');
+        console.error('❌ Error details:', error);
+      }
       return this.getMockAgents();
     }
   }
