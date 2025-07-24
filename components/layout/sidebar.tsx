@@ -15,7 +15,6 @@ import {
   ChevronRight,
   UsersRound,
   UserCog,
-  Bot,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -88,12 +87,6 @@ export function Sidebar({ className }: SidebarProps) {
           title: "Atribuições",
           href: "/atribuicoes",
           icon: UserCog,
-          allowedFor: ["admin"],
-        },
-        {
-          title: "Bots",
-          href: "/bots",
-          icon: Bot,
           allowedFor: ["admin"],
         },
         {
