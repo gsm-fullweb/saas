@@ -1,199 +1,158 @@
-# 🚀 **ChatHook LangChain - Sistema de Atendimento Inteligente**
+# SaaS ChatHook - Plataforma de Chat Integrada
 
-## 📋 **Descrição**
+*Plataforma moderna de chat integrada com Chatwoot e Supabase*
 
-Sistema SaaS de atendimento multi-canal integrado com Chatwoot e LangChain para automações inteligentes. O projeto combina dados reais do Chatwoot (via proxy) com processamento de IA para otimizar o atendimento ao cliente.
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/rafael-portelas-projects/v0-modern-saa-s-platform)
+[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/RmpCWu6zU5R)
 
-## ✨ **Funcionalidades Principais**
+## Overview
 
-### 🤖 **LangChain Integration**
-- **Lead Scoring Automático**: Análise inteligente de leads
-- **Respostas Automáticas**: IA gera respostas contextuais
-- **Roteamento Inteligente**: Atribuição automática de agentes
-- **Enriquecimento de Contatos**: Dados enriquecidos automaticamente
-- **Webhooks para n8n**: Integração com automações externas
+SaaS ChatHook é uma plataforma moderna de chat que integra com Chatwoot via proxy e utiliza Supabase como banco de dados. A plataforma oferece:
 
-### 📊 **Dashboard Completo**
-- **Métricas em Tempo Real**: Conversas, agentes, performance
-- **Lista de Conversas**: Visualização e gerenciamento
-- **Kanban Board**: Organização visual das conversas
-- **Sistema de Notificações**: Alertas em tempo real
+- Dashboard para gestores e agentes
+- Integração com Chatwoot via proxy seguro
+- Sistema de autenticação e autorização
+- Gerenciamento de conversas, contatos e agentes
+- **Sistema de bots automatizados via webhooks**
+- Interface responsiva e moderna
 
-### 🔧 **Arquitetura Robusta**
-- **Proxy Chatwoot**: Comunicação segura com Chatwoot
-- **Fallbacks Inteligentes**: Funciona com ou sem IA
-- **Tratamento de Erros**: Sistema resiliente
-- **Modo Desenvolvimento**: Simulações para desenvolvimento
+## Funcionalidades
 
-## 🛠️ **Tecnologias Utilizadas**
+- **Dashboard**: Visão geral de conversas e métricas
+- **Conversas**: Gerenciamento de tickets e mensagens
+- **Contatos**: Base de dados de clientes
+- **Agentes**: Gerenciamento de equipe
+- **Bots**: Criação e gerenciamento de bots automatizados via webhooks
+- **Integração WhatsApp**: Via webhooks
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **UI**: Tailwind CSS + Lucide React
-- **IA**: LangChain + OpenAI GPT-4
-- **Backend**: Chatwoot Proxy (PHP)
-- **Automação**: n8n Webhooks
-- **Monitoramento**: Agent Proxy (Node.js)
+## 🚀 Sistema de Bots
 
-## 🚀 **Instalação e Configuração**
+### Características dos Bots
 
-### **1. Clone o repositório**
-```bash
-git clone <seu-repositorio>
-cd project-chathook-LangChain
+- **Criação Simples**: Interface intuitiva para criar bots
+- **Teste de Conexão**: Teste webhooks diretamente na interface
+- **Chat de Teste**: Simule conversas reais com seus bots
+- **Chat Flutuante**: Interface compacta para testes rápidos
+- **Monitoramento em Tempo Real**: Indicadores de status dos bots
+- **Dashboard de Estatísticas**: Métricas detalhadas de performance
+- **Múltiplas Plataformas**: Suporte para n8n, Zapier, Make e sistemas personalizados
+- **Payload Estruturado**: Dados organizados e bem documentados
+
+### Como Usar
+
+1. **Criar Bot**:
+   - Acesse a seção **Bots** no menu lateral
+   - Clique em **"Novo Bot"**
+   - Insira a URL do webhook (ex: `https://n8n-n8n.n1n956.easypanel.host/webhook/conversa`)
+   - Teste a conexão com o botão de teste
+   - Ative o bot e salve
+
+2. **Testar Bot**:
+   - Use o botão de chat para abrir o simulador de conversa
+   - Envie mensagens de teste e veja as respostas do webhook
+   - Use o "Teste Automático" para enviar múltiplas mensagens
+   - Monitore estatísticas em tempo real
+
+3. **Chat Flutuante**:
+   - Use o botão de chat flutuante para testes rápidos
+   - Interface compacta que não interfere na navegação
+   - Ideal para testes contínuos durante o desenvolvimento
+
+4. **Monitoramento**:
+   - Visualize o status dos bots em tempo real
+   - Acompanhe métricas de performance no dashboard
+   - Veja estatísticas detalhadas de uso
+
+### Exemplo de Webhook
+
+```json
+{
+  "conversa_id": "conv-123456",
+  "contato": {
+    "nome": "João Silva",
+    "telefone": "+5511999999999"
+  },
+  "mensagem": {
+    "conteudo": "Olá, preciso de ajuda",
+    "tipo": "texto"
+  }
+}
 ```
 
-### **2. Instale as dependências**
+## Configuração do Ambiente
+
+### Variáveis de Ambiente
+
+Crie um arquivo `.env.local` na raiz do projeto com as seguintes variáveis:
+
 ```bash
+# Supabase Configuration
+POSTGRES_URL=postgres://postgres.djlnjrrgejrgmguepjoh:0KDHSEqepYpnMfDf@aws-0-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require&supa=base-pooler.x
+POSTGRES_PRISMA_URL=postgres://postgres.djlnjrrgejrgmguepjoh:0KDHSEqepYpnMfDf@aws-0-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true
+SUPABASE_URL=https://djlnjrrgejrgmguepjoh.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://djlnjrrgejrgmguepjoh.supabase.co
+POSTGRES_URL_NON_POOLING=postgres://postgres.djlnjrrgejrgmguepjoh:0KDHSEqepYpnMfDf@aws-0-sa-east-1.pooler.supabase.com:5432/postgres?sslmode=require
+SUPABASE_JWT_SECRET=KmnDpr779ZJpqbAAss5nnZ4l4+CsyhelBHQMBajYQnwkj6oT9djOwQmt9kg58g81X5rtfUw6r+g1kdeMBP8D4g==
+POSTGRES_USER=postgres
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqbG5qcnJnZWpyZ21ndWVwam9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyNjE2MzYsImV4cCI6MjA2ODgzNzYzNn0.7N_nP26Z_efJpwH1bS-JGQkWNmpY0dM91jVolhjbo98
+POSTGRES_PASSWORD=0KDHSEqepYpnMfDf
+POSTGRES_DATABASE=postgres
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqbG5qcnJnZWpyZ21ndWVwam9oIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzI2MTYzNiwiZXhwIjoyMDY4ODM3NjM2fQ.Mq6qqVuqXCMcL8dG4lE1bn6Of_O3MWCdJHz3uNBOTGk
+POSTGRES_HOST=db.djlnjrrgejrgmguepjoh.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqbG5qcnJnZWpyZ21ndWVwam9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyNjE2MzYsImV4cCI6MjA2ODgzNzYzNn0.7N_nP26Z_efJpwH1bS-JGQkWNmpY0dM91jVolhjbo98
+```
+
+### Instalação
+
+```bash
+# Instalar dependências
 npm install
-```
+# ou
+pnpm install
 
-### **3. Configure as variáveis de ambiente**
-Crie um arquivo `.env` na raiz do projeto:
-```bash
-# LangChain OpenAI Configuration
-VITE_OPENAI_API_KEY=your_openai_api_key_here
-REACT_APP_OPENAI_API_KEY=your_openai_api_key_here
-
-# Chatwoot Proxy Configuration
-VITE_CHATWOOT_PROXY_URL=https://api.chathook.com.br/api/chatwoot-proxy.php
-REACT_APP_CHATWOOT_PROXY_URL=https://api.chathook.com.br/api/chatwoot-proxy.php
-
-# Account Configuration
-VITE_CHATWOOT_ACCOUNT_ID=1
-REACT_APP_CHATWOOT_ACCOUNT_ID=1
-
-# Development Configuration
-VITE_DEV_MODE=true
-REACT_APP_DEV_MODE=true
-```
-
-### **4. Execute o projeto**
-```bash
+# Executar em desenvolvimento
 npm run dev
+# ou
+pnpm dev
 ```
 
-### **5. Acesse a aplicação**
-Abra http://localhost:5173 no seu navegador
+## Arquitetura
 
-## 📁 **Estrutura do Projeto**
+### Estrutura do Projeto
 
-```
-project-chathook-LangChain/
-├── src/
-│   ├── components/
-│   │   └── chatwoot/          # Componentes do Chatwoot
-│   ├── hooks/                 # Custom hooks
-│   ├── services/              # Serviços (LangChain, API)
-│   ├── types/                 # Tipos TypeScript
-│   └── utils/                 # Utilitários
-├── scripts/                   # Scripts de automação
-├── agent-proxy.js            # Monitor de proxy
-├── agent-proxy.config.js     # Configuração do agente
-└── docs/                     # Documentação
-```
+- `app/` - Páginas e layouts do Next.js
+- `components/` - Componentes React reutilizáveis
+- `lib/` - Configurações e utilitários
+- `hooks/` - Hooks personalizados
+- `services/` - Serviços externos (WhatsApp, Bots, etc.)
 
-## 🎯 **Como Usar**
+### Integração com Chatwoot
 
-### **1. Dashboard Principal**
-- Visualize métricas em tempo real
-- Acompanhe conversas ativas
-- Monitore performance dos agentes
+A plataforma utiliza um proxy seguro para comunicação com o Chatwoot:
 
-### **2. Lista de Conversas**
-- Gerencie todas as conversas
-- Atribua agentes
-- Adicione tags e notas
+- **Proxy URL**: `https://api.chathook.com.br/api/chatwoot-proxy.php`
+- **Autenticação**: Gerenciada pelo proxy (sem tokens expostos)
+- **Estrutura de dados**: `{ "data": { "meta": {...}, "payload": [...] } }`
 
-### **3. Kanban Board**
-- Organize conversas por status
-- Arraste e solte para mudar status
-- Visualização intuitiva
+### Banco de Dados (Supabase)
 
-### **4. Demo LangChain**
-- Teste funcionalidades de IA
-- Simule eventos e automações
-- Veja logs detalhados
+O Supabase é utilizado para:
 
-## 🔧 **Scripts Disponíveis**
+- Autenticação de usuários
+- Armazenamento de dados da empresa
+- Gerenciamento de conversas e mensagens
+- Sistema de permissões e roles
 
-```bash
-# Desenvolvimento
-npm run dev                    # Inicia servidor de desenvolvimento
-npm run build                  # Build para produção
-npm run preview                # Preview do build
+## Deployment
 
-# Monitor de Proxy
-npm run proxy-monitor          # Inicia monitor do proxy
-npm run proxy-monitor:dev      # Modo desenvolvimento
-npm run proxy-monitor:prod     # Modo produção
-npm run proxy-monitor:test     # Modo teste
-```
+O projeto está configurado para deploy no Vercel com as variáveis de ambiente necessárias.
 
-## 📊 **Status do Sistema**
+## Desenvolvimento
 
-| Componente | Status | Detalhes |
-|------------|--------|----------|
-| **Frontend React** | ✅ Funcionando | Interface responsiva |
-| **Proxy Chatwoot** | ✅ Funcionando | Dados reais carregados |
-| **LangChain IA** | ✅ Funcionando | Com ou sem API key |
-| **Simulação Ações** | ✅ Funcionando | Logs detalhados |
-| **Webhooks n8n** | ⚠️ Tentativa | Funciona se não houver CORS |
+Para continuar o desenvolvimento, acesse:
+**[https://v0.dev/chat/projects/RmpCWu6zU5R](https://v0.dev/chat/projects/RmpCWu6zU5R)**
 
-## 🚨 **Solução de Problemas**
+## Documentação
 
-### **Erro: "process is not defined"**
-✅ **Já corrigido!** O sistema detecta automaticamente o ambiente.
-
-### **Erro: "OpenAI API key not found"**
-1. Verifique se o arquivo `.env` existe
-2. Confirme se `VITE_OPENAI_API_KEY` está configurada
-3. Reinicie o servidor: `npm run dev`
-
-### **Erro: "CORS policy"**
-✅ **Já resolvido!** Sistema funciona em modo de desenvolvimento com simulações.
-
-## 🔄 **Fluxo de Dados**
-
-```
-Frontend (React) 
-    ↓ GET (dados reais)
-Proxy Chatwoot 
-    ↓
-LangChain (processamento IA)
-    ↓
-Simulação de Ações (logs)
-    ↓
-Webhooks n8n (tentativa)
-```
-
-## 📈 **Próximos Passos**
-
-1. **Configure API key** do OpenAI para IA completa
-2. **Personalize automações** conforme suas regras de negócio
-3. **Configure CORS** no proxy para produção
-4. **Implemente testes** automatizados
-5. **Deploy em produção**
-
-## 🤝 **Contribuição**
-
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
-## 📄 **Licença**
-
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
-
-## 📞 **Suporte**
-
-- **Documentação**: Veja os arquivos `.md` no projeto
-- **Issues**: Abra uma issue no GitHub
-- **Email**: richard.fullweb@gmail.com
-
----
-
-**Desenvolvido com ❤️ por Richard Wagner Portela**
-
-**Sistema pronto para uso e desenvolvimento! 🚀✨** 
+- [Guia de Configuração](./SETUP.md)
+- [Guia de Bots](./docs/bots-guide.md)
